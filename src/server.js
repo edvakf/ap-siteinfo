@@ -55,7 +55,7 @@ window.onload = function () {
   }
 }
 
-var siteinfo = null;
+var siteinfo = null;  // Array of [compiled url-regexp, info]
 var siteinfo_wildcard = [];
 var cache = {};
 
@@ -67,7 +67,7 @@ function get(e) {
   url = url[0];
   if (!url) return not_found(e);
   var info = search_siteinfo(url);
-  log(info.map(function(e){return [e.url.toString(), e.nextLink, e.pageElement]}).join('\n'));
+  log(info.map(function(e){return [e.url.toString(), e.nextLink, e.pageElement].join(' , ')}).join('\n'));
   info = info.concat(siteinfo_wildcard);
 
   var res = e.connection.response;
@@ -88,8 +88,8 @@ function search_siteinfo(url) {
   var results = [];
   var n = siteinfo.length;
   while(--n) {
-    var info = siteinfo[n].data || siteinfo[n];
-    if ((new RegExp(info.url)).test(url)) results.push(info);
+    var re = siteinfo[n][0];
+    if (re.test(url)) results.push(siteinfo[n][1]);
   }
   cache[url] = results;
   return results;
@@ -116,17 +116,19 @@ function update_siteinfo() {
     if (!text) retrun;
     window.AutoPagerizeCallbackSiteinfo = function(ary) {
       // reset cache
-      siteinfo = ary;
+      siteinfo = [];
       siteinfo_wildcard = [];
       cache = {};
 
-      var n = siteinfo.length;
+      var n = ary.length;
       while(--n) {
-        var info = siteinfo[n].data || siteinfo[n];
-        if (new RegExp(info.url).test('http://a')) {
+        var info = ary[n].data || ary[n];
+        var re = new RegExp(info.url);
+        if (re.test('http://a')) {
           // isolate siteinfo that matches any url
           siteinfo_wildcard.push(info);
-          siteinfo.splice(n,1);
+        } else {
+          siteinfo.push([re, info]);
         }
       }
     };
