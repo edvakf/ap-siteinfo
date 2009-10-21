@@ -66,11 +66,12 @@ function get(e) {
   if (!url) return not_found(e);
   url = url[0];
   if (!url) return not_found(e);
-  var info = search_siteinfo(url).concat(siteinfo_wildcard);
-  log(info.map(function(e){return e.url.toString()}).join('\n'));
+  var info = search_siteinfo(url);
+  log(info.map(function(e){return [e.url.toString(), e.nextLink, e.pageElement]}).join('\n'));
+  info = info.concat(siteinfo_wildcard);
 
   var res = e.connection.response;
-  res.setResponseHeader('Content-type', 'application/json');
+  res.setResponseHeader('Content-type', 'application/json; charset=utf-8');
   res.write('window.AutoPagerizeCallbackSiteinfo(' + JSON.stringify(info) + ');');
   res.close();
 }
