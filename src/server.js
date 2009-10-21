@@ -126,8 +126,6 @@ function index(e) {
   var res = e.connection.response;
   res.write('<!DOCTYPE html>'+
     '<title>AutoPagerize SITEINFO Server</title>'+
-    '<p><a href="javascript:location.href=\''+
-      'http://'+webserver.hostName + webserver.currentServicePath+'\';">'+
-    'You must enable accessing the service from the local machine.</a></p>');
+    '<p>Welcome to AutoPagerize SITEINFO Server</p>');
   res.close();
 }
