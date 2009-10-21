@@ -32,8 +32,8 @@ function saveFile(filename, text) {
 }
 
 /* server */
+var webserver = opera.io.webserver;
 window.onload = function () {
-  var webserver = opera.io.webserver;
   if (webserver){
     webserver.addEventListener('_index', index, false);
     webserver.addEventListener('get', get,false);
@@ -42,7 +42,7 @@ window.onload = function () {
 
 var siteinfo = null;
 var siteinfo_wildcard = [];
-//var cache = {};
+var cache = {};
 
 function get(e) {
   var req = e.connection.request;
@@ -77,10 +77,11 @@ function search_siteinfo(url) {
       xhr.send(null);
     }
     if (!text) return [];
-    function AutoPagerizeCallbackSiteinfo(ary) {siteinfo = ary};
+    window.AutoPagerizeCallbackSiteinfo = function(ary) {siteinfo = ary};
     eval(text); // loads jsonp like : AutoPagerizeCallbackSiteinfo([ /* blah blah */ ]);
   }
 
+  if (cache[url]) return cache[url];
   var results = [];
   var n = siteinfo.length;
   //var shortestmatch = '';
@@ -112,6 +113,7 @@ function search_siteinfo(url) {
       }
     }
   }
+  cache[url] = results;
   /*
   if (shortestmatch) {
     cache[shortestmatch] = results;
@@ -121,10 +123,11 @@ function search_siteinfo(url) {
 }
 
 function index(e) {
-  var req = e.connection.request;
   var res = e.connection.response;
   res.write('<!DOCTYPE html>'+
     '<title>AutoPagerize SITEINFO Server</title>'+
-    '<p><a href="javascript:location.href=\''+webserver.currentServicePath+'\';">You must enable accessing the service from the local machine.</a></p>');
+    '<p><a href="javascript:location.href=\''+
+      'http://'+webserver.hostName + webserver.currentServicePath+'\';">'+
+    'You must enable accessing the service from the local machine.</a></p>');
   res.close();
 }
