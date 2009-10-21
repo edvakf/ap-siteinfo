@@ -31,6 +31,21 @@ function saveFile(filename, text) {
   }
 }
 
+function fileOlderThan(filename, hours) {
+  var file = dir.resolve('/' + filename);
+  if (!file.exists) return false;
+  if (new Date - file.created > hours*60*60*1000) return true;
+  return false;
+}
+
+function httpGet(url, onload, onerror) {
+  var xhr = new XMLHttpRequest;
+  xhr.open('GET', url, false);
+  if (onload) xhr.onload = function(){onload(xhr.responseText)}
+  if (onerror) xhr.onerror = function(){onerror()}
+  xhr.send(null);
+}
+
 /* server */
 var webserver = opera.io.webserver;
 window.onload = function () {
@@ -67,58 +82,15 @@ function not_found(e) {
 }
 
 function search_siteinfo(url) {
-  if (!siteinfo) {
-    // first try readinf file, then try xhr
-    var text = readFile('wedataAutoPagerizeSITEINFO.js');
-    if (!text) {
-      var xhr = new XMLHttpRequest;
-      xhr.open('GET','http://ss-o.net/json/wedataAutoPagerizeSITEINFO.js',false);
-      xhr.onload = function(){text = xhr.responseText; saveFile('wedataAutoPagerizeSITEINFO.js',text);};
-      xhr.send(null);
-    }
-    if (!text) return [];
-    window.AutoPagerizeCallbackSiteinfo = function(ary) {siteinfo = ary};
-    eval(text); // loads jsonp like : AutoPagerizeCallbackSiteinfo([ /* blah blah */ ]);
-  }
-
+  update_siteinfo();
   if (cache[url]) return cache[url];
   var results = [];
   var n = siteinfo.length;
-  //var shortestmatch = '';
   while(--n) {
     var info = siteinfo[n].data || siteinfo[n];
-    var re = new RegExp(info.url);
-    var match = url.match(re)
-    if (match) {
-      if (re.test('http://a')) {
-        // isolate siteinfo that matches any url
-        siteinfo_wildcard.push(info);
-        siteinfo.splice(n,1);
-      } else {
-        results.push(info);
-
-        /*
-        // find the part of the url that matches all regexp's
-        if (shortestmatch !== null) {
-          if (shortestmatch === '' || match.indexOf(shortestmatch) >= 0) {
-            shortestmatch = match;
-          } else if (shortestmatch.indexOf(match) >= 0) {
-            // do nothing
-          } else {
-            // this case might be something like (a[bc)d], but it's not handled yet
-            shortestmatch = null;
-          }
-        }
-        */
-      }
-    }
+    if ((new RegExp(info.url)).test(url)) results.push(info);
   }
   cache[url] = results;
-  /*
-  if (shortestmatch) {
-    cache[shortestmatch] = results;
-  }
-  */
   return results;
 }
 
@@ -128,4 +100,35 @@ function index(e) {
     '<title>AutoPagerize SITEINFO Server</title>'+
     '<p>Welcome to AutoPagerize SITEINFO Server</p>');
   res.close();
+}
+
+function update_siteinfo() {
+  var filename = 'wedataAutoPagerizeSITEINFO.js';
+  var fileOld = fileOlderThan(filename, 24);
+  if (!siteinfo || fileOld) {
+    // first try readinf file, then try xhr
+    var text = readFile(filename);
+    if (!text || fileOld) {
+      httpGet('http://ss-o.net/json/wedataAutoPagerizeSITEINFO.js', 
+        function(t){if(t.length > 1000){text = t; saveFile(filename, t)}}); // if text length is less than 1000 bytes, it maybe an error message
+    }
+    if (!text) retrun;
+    window.AutoPagerizeCallbackSiteinfo = function(ary) {
+      // reset cache
+      siteinfo = ary;
+      siteinfo_wildcard = [];
+      cache = {};
+
+      var n = siteinfo.length;
+      while(--n) {
+        var info = siteinfo[n].data || siteinfo[n];
+        if (new RegExp(info.url).test('http://a')) {
+          // isolate siteinfo that matches any url
+          siteinfo_wildcard.push(info);
+          siteinfo.splice(n,1);
+        }
+      }
+    };
+    eval(text); // loads jsonp like : AutoPagerizeCallbackSiteinfo([ /* blah blah */ ]);
+  }
 }
