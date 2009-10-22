@@ -71,7 +71,7 @@ function get(e) {
   info = info.concat(siteinfo_wildcard);
 
   var res = e.connection.response;
-  res.setResponseHeader('Content-type', 'application/json; charset=utf-8');
+  res.setResponseHeader('Content-type', 'application/javascript; charset=utf-8');
   res.write('window.AutoPagerizeCallbackSiteinfo(' + JSON.stringify(info) + ');');
   res.close();
 }
