@@ -2,7 +2,7 @@
  * server.js : public domain
  */
 
-var debug = false;
+var debug = true;
 function log(text){
   if (debug) opera.postError(text);
 }
@@ -70,7 +70,9 @@ function get(e) {
   if (!url) return not_found(e);
   url = url[0];
   if (!url) return not_found(e);
+  var startTime = new Date;
   var info = search_siteinfo(url);
+  log('SITEINFO searching done : ' + (new Date - startTime) + 'ms');
   log(info.map(function(e){return [e.url.toString(), e.nextLink, e.pageElement].join(' , ')}).join('\n'));
   info = info.concat(siteinfo_wildcard);
 
@@ -112,6 +114,7 @@ function update_siteinfo() {
   var filename = 'wedataAutoPagerizeSITEINFO.js';
   var fileOld = fileOlderThan(filename, 24);
   if (!siteinfo || fileOld) {
+    log('updating siteinfo');
     // first try readinf file, then try xhr
     var text = readFile(filename);
     if (!text || fileOld) {
@@ -137,6 +140,8 @@ function update_siteinfo() {
         }
       }
     };
+    var startTime = new Date;
     eval(text); // loads jsonp like : AutoPagerizeCallbackSiteinfo([ /* blah blah */ ]);
+    log('SITEINFO initial scan done : ' + (new Date - startTime) + 'ms');
   }
 }
