@@ -14,9 +14,10 @@ function readFile(filename) {
   try {
     var stream = dir.open(dir.resolve('/' + filename), opera.io.filemode.READ);
     data = stream.read(100000000);
-    stream.close();
   } catch(e) {
     log(e);
+  } finally {
+    stream.close();
   }
   return data;
 };
@@ -25,9 +26,10 @@ function saveFile(filename, text) {
   try {
     var stream = dir.open(dir.resolve('/' + filename), opera.io.filemode.WRITE);
     stream.write(text);
-    stream.close();
   } catch(e) {
     log(e);
+  } finally {
+    stream.close();
   }
 }
 
@@ -47,6 +49,7 @@ function httpGet(url, onload, onerror) {
 }
 
 /* server */
+// dispatcher
 var webserver = opera.io.webserver;
 window.onload = function () {
   if (webserver){
@@ -59,6 +62,7 @@ var siteinfo = null;  // Array of [compiled url-regexp, info]
 var siteinfo_wildcard = [];
 var cache = {};
 
+// request handler (view)
 function get(e) {
   var req = e.connection.request;
 
@@ -82,6 +86,15 @@ function not_found(e) {
   res.close();
 }
 
+function index(e) {
+  var res = e.connection.response;
+  res.write('<!DOCTYPE html>'+
+    '<title>AutoPagerize SITEINFO Server</title>'+
+    '<p>Welcome to AutoPagerize SITEINFO Server</p>');
+  res.close();
+}
+
+// controller
 function search_siteinfo(url) {
   update_siteinfo();
   if (cache[url]) return cache[url];
@@ -93,14 +106,6 @@ function search_siteinfo(url) {
   }
   cache[url] = results;
   return results;
-}
-
-function index(e) {
-  var res = e.connection.response;
-  res.write('<!DOCTYPE html>'+
-    '<title>AutoPagerize SITEINFO Server</title>'+
-    '<p>Welcome to AutoPagerize SITEINFO Server</p>');
-  res.close();
 }
 
 function update_siteinfo() {
