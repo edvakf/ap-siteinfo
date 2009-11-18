@@ -74,9 +74,10 @@ function search_siteinfo(url, force_update) {
   if (cache[url]) return cache[url];
   var results = [];
   var n = siteinfo.length;
-  while(--n) {
-    var re = siteinfo[n][0];
-    if (re.test(url)) results.push(siteinfo[n][1]);
+  var info;
+  while(info = siteinfo[--n]) {
+    var re = info[0];
+    if (re.test(url)) results.push(info[1]);
   }
   if (url.indexOf('?') < 0) cache[url] = results;
   return results;
