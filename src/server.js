@@ -22,10 +22,38 @@ function httpGet(url) {
 window.onload = function () {
   var webserver = opera.io.webserver;
   if (webserver){
-    webserver.addEventListener('_index', index, false);
-    webserver.addEventListener('get', get,false);
+    webserver.addEventListener('_index', wrap_handler(index), false);
+    webserver.addEventListener('get', wrap_handler(get),false);
     update_siteinfo();
   }
+}
+
+function wrap_handler(handler) {
+  return function(e) {
+    if (e.connection.isLocal) {
+      try {
+        handler(e);
+      } catch(err) {
+        log(err);
+        if (!e.connection.isClosed) server_error(e);
+      }
+    } else {
+      not_found(e);
+    }
+  }
+}
+
+// request handler (view)
+function server_error(e) {
+  var res = e.connection.response;
+  res.setStatusCode('500', 'Server Error');
+  res.close();
+}
+
+function not_found(e) {
+  var res = e.connection.response;
+  res.setStatusCode('404', 'Not Found');
+  res.close();
 }
 
 var siteinfo = [];  // Array of [compiled url-regexp, info]
@@ -33,7 +61,6 @@ var microformats = [];
 var cache = {};
 var last_updated = null;
 
-// request handler (view)
 function get(e) {
   var req = e.connection.request;
 
@@ -51,12 +78,6 @@ function get(e) {
   res.setResponseHeader('Content-type', 'application/javascript; charset=utf-8');
   if (last_updated) res.setResponseHeader('Last-Modified', last_updated.toUTCString());
   res.write('window.AutoPagerizeCallbackSiteinfo(' + JSON.stringify(info) + ');');
-  res.close();
-}
-
-function not_found(e) {
-  var res = e.connection.response;
-  res.setStatus('404', 'Not Found');
   res.close();
 }
 
