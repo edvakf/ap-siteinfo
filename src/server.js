@@ -91,6 +91,9 @@ function index(e) {
 
 // controller
 function search_siteinfo(url, force_update) {
+  if (/^http:\/\/(www|images)\.google\.(?:[^.]+\.)?[^.\/]+\/images\?./.test(url)) {
+    url = url.replace(/^http:\/\/www/,'http://images') + '&gbv=1'; // Google Images hack see oAutoPagerize.js
+  }
   if (force_update || !siteinfo) update_siteinfo();
   if (cache[url]) return cache[url];
   var results = [];
