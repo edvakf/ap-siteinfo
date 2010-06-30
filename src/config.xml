@@ -9,6 +9,16 @@
     <link>http://my.opera.com/edvakf/blog/</link>
   </author>
 
+  <security>
+    <access>
+      <protocol>http</protocol>
+      <host>ss-o.net</host>
+      <port>80</port>
+      <path>/json/wedataAutoPagerizeSITEINFO.json</path>
+    </access>
+    <content plugins="no" java="no"/>
+  </security>
+
   <feature name="http://xmlns.opera.com/webserver">
     <param name="type" value="service"/>
     <param name="servicepath" value="ap-siteinfo"/>
